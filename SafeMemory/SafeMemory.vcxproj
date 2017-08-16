@@ -142,10 +142,12 @@
     <Text Include="ReadMe.txt" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\lib\MemWiz.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="targetver.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\lib\MemWiz.cpp" />
     <ClCompile Include="SafeMemory.cpp" />
     <ClCompile Include="stdafx.cpp" />
   </ItemGroup>
