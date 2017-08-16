@@ -98,7 +98,8 @@ namespace MemoryControl {
 	template<class T>
 	T & _memory_interface::_smart_ptr<T>::operator*()
 	{
-		if (!s_ref || !s_ref->mem_ref) return T();
+		T zero = T();
+		if (!s_ref || !s_ref->mem_ref) return zero;
 		return *((T*)s_ref->mem_ref);
 	}
 
@@ -114,7 +115,7 @@ namespace MemoryControl {
 	}
 
 	template<class T>
-	_memory_interface::_smart_ptr<T>& _memory_interface::_smart_ptr<T>::operator=(_memory_interface::_smart_ptr<T>& _left)
+	_memory_interface::_smart_ptr<T> _memory_interface::_smart_ptr<T>::operator=(_memory_interface::_smart_ptr<T>& _left)
 	{
 		this->s_ref = _left.s_ref;
 		this->s_ref->ref_count++;
@@ -196,6 +197,13 @@ namespace MemoryControl {
 	MemoryControl::_memory_interface::~_memory_interface()
 	{
 		//TODO:проверка счётчика ссылок. При завершении работы программы в принципе не требуется. но возможно потребуется переинициализация пула памяти в течение работы, например если реализовать сохранение/загрузку программ
+		ref* iter = this->reference;
+		std::cout << "_memory_interface dest. number of links left: \n";
+		while (iter <  this->mem_pool) {
+			if (iter->ref_count) {
+				std::cout << iter->ref_count << "\n";
+			}
+		}		
 		free(block);
 	}
 
@@ -214,16 +222,23 @@ namespace MemoryControl {
 	{
 		int a = 7;
 		double b = 15.2;
-		_memory_interface::_smart_ptr<double> ptr;
+		sp_double ptr;
 		ptr = mem_wiz.get_smart(b);
 		double *c = ptr.get_ptr_unsafe();
 		double d = *c;
-		_memory_interface::_smart_ptr<int> ptr1;
+		sp_int32_t ptr1;
 		ptr1 = mem_wiz.get_smart(a);
 		int *k = ptr1.get_ptr_unsafe();
 		int n = *k;
-		_memory_interface::_smart_ptr<char> ptr3;
+		sp_int8_t ptr3;
 		
+		sp_double ptr4;
+		sp_double ptr5 = ptr4 = ptr;//такое выражение имеет неверное поведение.
+		
+
+		c = ptr4.get_ptr_unsafe();
+		d = *c;
+		d = (*ptr + *ptr4)/(*ptr5);
 
 		return 0;
 	}

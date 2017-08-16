@@ -8,9 +8,7 @@
 #define ALLOCATOR MemoryControl::mem_wiz
 //#define NEW (auto o) MemoryControl::mem_wiz.get_smart(o) //TODO:попробовать задефайнить свой NEW как макрос.
 
-namespace MemoryControl {
-
-	
+namespace MemoryControl {	
 	
 	class _memory_interface {
 	private:
@@ -42,14 +40,20 @@ namespace MemoryControl {
 			_smart_ptr(T _obj);
 			_smart_ptr(T _obj, size_t _size_of_array);//так же объ€вление массива. возможно имеет смысл сделать отдельный класс указателей только под массивы.
 			~_smart_ptr() {
-				std::cout << "dest smart\n";				
-				if (s_ref->ref_count > 0) {
-					s_ref->ref_count--;
-				}
-				else {//возможен какой-либо кос€к с учЄтом всех ссылок.
+				std::cout << "dest smart\n";
+				std::cout << "memory adress: "<< s_ref;
+				if (s_ref) {
+					if (s_ref->ref_count > 0) {
+						s_ref->ref_count--;
+						std::cout << ", links left: " << s_ref->ref_count << "\n";
+					}
+					else {//возможен какой-либо кос€к с учЄтом всех ссылок.
 
+					}
 				}
-				s_ref = nullptr;
+				else
+					std::cout << ", links' not initialized\n";
+				//s_ref = nullptr;
 			}
 
 			//Ќебезопасно! Ќельз€ удал€ть ("забывать") сам smart_pointer! Ќельз€ использовать delete!
@@ -65,7 +69,7 @@ namespace MemoryControl {
 
 			T& operator[](size_t);
 
-			_smart_ptr<T>& operator=(_smart_ptr<T>& _left);
+			_smart_ptr<T> operator=(_smart_ptr<T>& _left);
 			
 		};
 
@@ -80,4 +84,13 @@ namespace MemoryControl {
 	int test();		
 
 }
+
+//не придумал ничего умнее.
+typedef MemoryControl::_memory_interface::_smart_ptr<int8_t> sp_int8_t;
+typedef MemoryControl::_memory_interface::_smart_ptr<int16_t> sp_int16_t;
+typedef MemoryControl::_memory_interface::_smart_ptr<int32_t> sp_int32_t;
+typedef MemoryControl::_memory_interface::_smart_ptr<int64_t> sp_int64_t;
+typedef MemoryControl::_memory_interface::_smart_ptr<double> sp_double;
+
+
 #endif //MEMWIZ_H

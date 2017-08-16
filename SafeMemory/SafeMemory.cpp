@@ -11,7 +11,7 @@ int main()
 	MemoryControl::test();
 	
 
-
+	MemoryControl::mem_wiz.~_memory_interface();
     return 0;
 }
 
