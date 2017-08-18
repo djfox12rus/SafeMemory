@@ -84,12 +84,14 @@ namespace MemoryControl {
 	{
 		//TODO:проверка счётчика ссылок. При завершении работы программы в принципе не требуется. но возможно потребуется переинициализация пула памяти в течение работы, например если реализовать сохранение/загрузку программ
 		ref* iter = this->reference_table;
+#ifdef _TEST
 		std::cout << "_memory_interface dest. number of links left: \n";
 		while (iter < reference_table + 512) {
 			if (iter->ref_count) {
 				std::cout << iter->ref_count << "\n";
 			}
-		}		
+		}	
+#endif
 		free(this->block);
 		free(this->reference_table);
 	}
@@ -100,38 +102,17 @@ namespace MemoryControl {
 		*((T*)this->s_ref->mem_ref) = _obj;		
 	}
 
+#ifdef _TEST
 	int test()
 	{
-		int a = 7;
-		double b = 15.2;
-		double_sptr ptr = double_sptr(a);
-		
-		double *c = ptr.get_ptr_unsafe();
-		double d = *c;
-
-		int32__sptr ptr1 = int32__sptr(int(),5);
-		for (int i = 0; i < 5; i++) {
-			a = i *(2 + i);
-			ptr1[i] = a;
-			std::cout << a << "\n";
-		}
-		for (int i = 0; i < 5; i++) {
-			std::cout << ptr1[i] << "\n";
-		}
-		
-		
-		
-		double_sptr ptr4;
-		double_sptr ptr5;
-		ptr5 = ptr4 = ptr;
-
-		c = ptr4.get_ptr_unsafe();
-		d = *c;
-		d = (*ptr + *ptr4)/(*ptr5);
+		double a = 3.14;
+		double_sptr ptr1 = double_sptr(a);
+		double *unsafe = ptr1.get_ptr_unsafe();
+		std::cout << *unsafe << ",   " << unsafe<< "\n";
 
 		return 0;
 	}
-
+#endif
 
 
 	template<class T>
@@ -235,25 +216,25 @@ namespace MemoryControl {
 		return *((T*)s_ref->mem_ref);
 	}
 
-	template<class T>
-	T & _smart_ptr<T>::operator[](size_t _place)
-	{
-		//НО данный оператор сработает в т.ч. и не для массивов. При любом отличном от нуля значении _place он выдаст результат нулевого конструктора, но выдаст.
+	//template<class T>
+	//T & _smart_ptr<T>::operator[](size_t _place)
+	//{
+	//	//НО данный оператор сработает в т.ч. и не для массивов. При любом отличном от нуля значении _place он выдаст результат нулевого конструктора, но выдаст.
 
-		T zero = T();
-		T* out;
-		if (!s_ref || !s_ref->mem_ref) return zero;//нулевые указатели
-		if ((void*)((T*)s_ref->mem_ref + _place) >= (void*)((int8_t*)ALLOCATOR.block + unit_memory * 1024)) return zero; //выход за пределы глобальной памяти
-		_memory_interface::ref* next_ref = s_ref + 1;
-		if (!next_ref->mem_ref) { 
-			out = (T*)s_ref->mem_ref + _place;
-			return *out; 
-		}
-		if ((void*)((T*)s_ref->mem_ref + _place) >= next_ref->mem_ref) return zero;
+	//	T zero = T();
+	//	T* out;
+	//	if (!s_ref || !s_ref->mem_ref) return zero;//нулевые указатели
+	//	if ((void*)((T*)s_ref->mem_ref + _place) >= (void*)((int8_t*)ALLOCATOR.block + unit_memory * 1024)) return zero; //выход за пределы глобальной памяти
+	//	_memory_interface::ref* next_ref = s_ref + 1;
+	//	if (!next_ref->mem_ref) { 
+	//		out = (T*)s_ref->mem_ref + _place;
+	//		return *out; 
+	//	}
+	//	if ((void*)((T*)s_ref->mem_ref + _place) >= next_ref->mem_ref) return zero;
 
-		out = (T*)s_ref->mem_ref + _place;
-		return *out;
-	}
+	//	out = (T*)s_ref->mem_ref + _place;
+	//	return *out;
+	//}
 
 	template<class T>
 	_smart_ptr<T>& _smart_ptr<T>::operator=(_smart_ptr<T>& _left)

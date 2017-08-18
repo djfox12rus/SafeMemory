@@ -1,7 +1,7 @@
 #pragma once
 #ifndef MEMWIZ_H
 #define MEMWIZ_H
-
+#define _TEST
 #include <cstdint>
 #include <cstdlib>
 #include <iostream>
@@ -31,13 +31,14 @@ namespace MemoryControl {
 		
 	};
 	extern _memory_interface mem_wiz;
+#ifdef _TEST
 	int test();	
-
+#endif
 
 
 	template<class T>
 	class _smart_ptr {
-	private:
+	protected:
 		_memory_interface::ref *s_ref;
 		bool check_if_can_continue(size_t);
 	public:
@@ -45,20 +46,26 @@ namespace MemoryControl {
 		_smart_ptr(T _obj);
 		_smart_ptr(T _obj, size_t _size_of_array);//так же объ€вление массива. возможно имеет смысл сделать отдельный класс указателей только под массивы.
 		~_smart_ptr() {
+#ifdef _TEST
 			std::cout << "dest smart\n";
-			std::cout << "memory adress: " << s_ref;
+			std::cout << "memory adress: " << s_ref->mem_ref;
+#endif
 			if (s_ref) {
 				if (s_ref->ref_count > 0) {
 					s_ref->ref_count--;
+#ifdef _TEST
 					std::cout << ", links left: " << s_ref->ref_count << "\n";
+#endif
 				}
 				else {//возможен какой-либо кос€к с учЄтом всех ссылок.
 
 				}
 			}
 			else
+#ifdef _TEST
 				std::cout << ", links' not initialized\n";
-			//s_ref = nullptr;
+#endif
+			s_ref = nullptr;
 		}
 
 		//Ќебезопасно! Ќельз€ удал€ть ("забывать") сам smart_pointer! Ќельз€ использовать delete!
@@ -72,7 +79,7 @@ namespace MemoryControl {
 		T* operator->();
 		T& operator* ();
 
-		T& operator[](size_t);
+		//T& operator[](size_t);
 
 		_smart_ptr<T>& operator=(_smart_ptr<T>& _left);
 
@@ -80,11 +87,28 @@ namespace MemoryControl {
 
 	};
 
+	//template<double>
+	class _smart_ptr_dbl :public _smart_ptr<double> {
+	public:
+		_smart_ptr_dbl() :_smart_ptr(){}
+		_smart_ptr_dbl(double _obj) :_smart_ptr(_obj) {
+#ifdef _TEST
+			std::cout << "smart double constructed. number of links: "<< s_ref->ref_count<<", adress: "<<s_ref->mem_ref<<"\n";
+
+#endif
+		}
+		_smart_ptr_dbl(double _obj, size_t _size_of_array) :_smart_ptr(_obj, _size_of_array) {}
+		~_smart_ptr_dbl(){
+#ifdef _TEST
+			std::cout << "dest smart double\n";
+#endif
+		}
+	};
 
 
 }
 
-//не придумал ничего умнее.
+
 //signed
 typedef MemoryControl::_smart_ptr<int8_t> int8__sptr;
 typedef MemoryControl::_smart_ptr<int16_t> int16__sptr;
@@ -97,9 +121,11 @@ typedef MemoryControl::_smart_ptr<uint32_t> uint32__sptr;
 typedef MemoryControl::_smart_ptr<uint64_t> uint64_sptr;
 //floating
 typedef MemoryControl::_smart_ptr<float> float_sptr;
-typedef MemoryControl::_smart_ptr<double> double_sptr;
+
+typedef MemoryControl::_smart_ptr_dbl double_sptr;
+
 typedef MemoryControl::_smart_ptr<long double> ldouble_sptr;
 
-#define MY_DOUBLE MemoryControl::_smart_ptr<long double> 
+
 
 #endif //MEMWIZ_H

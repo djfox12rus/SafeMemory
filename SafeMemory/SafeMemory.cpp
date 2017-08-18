@@ -4,10 +4,20 @@
 #include "stdafx.h"
 #include "../lib/MemWiz.h"
 
+
 extern MemoryControl::_memory_interface mem_wiz;
 
 int main()
 {
+#ifdef _TEST
+	MemoryControl::test();
+#endif
+
+	double_sptr d_arr = double_sptr(3.1524);
+	double *unsafe = d_arr.get_ptr_unsafe();
+	std::cout << *unsafe << ",   " << unsafe << "\n";
+	d_arr.~double_sptr();
+	/*
 	ldouble_sptr d_arr = ldouble_sptr(double(), 50);
 	std::cout << "d_arr: ";
 	for (int i = 0; i < 50; i++) {
@@ -36,7 +46,7 @@ int main()
 	for (int i = 0; i < 50; i++) {
 		std::cout << d_arr[i] << ", ";
 	}
-	std::cout << "\n";
+	std::cout << "\n";*/
 
 
 	MemoryControl::mem_wiz.~_memory_interface();
