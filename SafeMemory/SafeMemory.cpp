@@ -4,8 +4,8 @@
 #include "stdafx.h"
 #include "../lib/MemWiz.h"
 
+using namespace MemoryControl;
 
-extern MemoryControl::_memory_interface mem_wiz;
 
 int main()
 {
@@ -13,10 +13,11 @@ int main()
 	MemoryControl::test();
 #endif
 
-	double_sptr d_arr = double_sptr(3.1524);
+	double a = 45.14;
+	_smart_ptr<double> d_arr = _smart_ptr<double>(a, 10);
 	double *unsafe = d_arr.get_ptr_unsafe();
 	std::cout << *unsafe << ",   " << unsafe << "\n";
-	d_arr.~double_sptr();
+	d_arr.~_smart_ptr();
 	/*
 	ldouble_sptr d_arr = ldouble_sptr(double(), 50);
 	std::cout << "d_arr: ";

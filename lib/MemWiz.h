@@ -87,44 +87,7 @@ namespace MemoryControl {
 
 	};
 
-	//template<double>
-	class _smart_ptr_dbl :public _smart_ptr<double> {
-	public:
-		_smart_ptr_dbl() :_smart_ptr(){}
-		_smart_ptr_dbl(double _obj) :_smart_ptr(_obj) {
-#ifdef _TEST
-			std::cout << "smart double constructed. number of links: "<< s_ref->ref_count<<", adress: "<<s_ref->mem_ref<<"\n";
-
-#endif
-		}
-		_smart_ptr_dbl(double _obj, size_t _size_of_array) :_smart_ptr(_obj, _size_of_array) {}
-		~_smart_ptr_dbl(){
-#ifdef _TEST
-			std::cout << "dest smart double\n";
-#endif
-		}
-	};
-
-
 }
-
-
-//signed
-typedef MemoryControl::_smart_ptr<int8_t> int8__sptr;
-typedef MemoryControl::_smart_ptr<int16_t> int16__sptr;
-typedef MemoryControl::_smart_ptr<int32_t> int32__sptr;
-typedef MemoryControl::_smart_ptr<int64_t> int64_sptr;
-//unsigned
-typedef MemoryControl::_smart_ptr<uint8_t> uint8__sptr;
-typedef MemoryControl::_smart_ptr<uint16_t> uint16__sptr;
-typedef MemoryControl::_smart_ptr<uint32_t> uint32__sptr;
-typedef MemoryControl::_smart_ptr<uint64_t> uint64_sptr;
-//floating
-typedef MemoryControl::_smart_ptr<float> float_sptr;
-
-typedef MemoryControl::_smart_ptr_dbl double_sptr;
-
-typedef MemoryControl::_smart_ptr<long double> ldouble_sptr;
 
 
 

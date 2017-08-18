@@ -76,7 +76,11 @@ namespace MemoryControl {
 			block = calloc(unit_memory, 1024);//в Кб
 			try_count++;
 		} while (try_count < 5 && (!block));//попытаться выделить память для начального пула 		
-		block_end = (int8_t*)block + unit_memory * 1024;
+		block_end = (void*)((int8_t*)block + unit_memory * 1024);
+#ifdef _TEST
+		std::cout << "_memory_interface() constructed.\n Pool from: " << block << " to " << block_end <<" All memory: " << unit_memory <<" Kb\n";
+#endif
+
 	}
 
 
@@ -85,7 +89,7 @@ namespace MemoryControl {
 		//TODO:проверка счётчика ссылок. При завершении работы программы в принципе не требуется. но возможно потребуется переинициализация пула памяти в течение работы, например если реализовать сохранение/загрузку программ
 		ref* iter = this->reference_table;
 #ifdef _TEST
-		std::cout << "_memory_interface dest. number of links left: \n";
+		std::cout << "_memory_interface destructed.\n number of links left: 0\n";
 		while (iter < reference_table + 512) {
 			if (iter->ref_count) {
 				std::cout << iter->ref_count << "\n";
@@ -106,7 +110,7 @@ namespace MemoryControl {
 	int test()
 	{
 		double a = 3.14;
-		double_sptr ptr1 = double_sptr(a);
+		_smart_ptr<double> ptr1 = _smart_ptr<double>(a,10);
 		double *unsafe = ptr1.get_ptr_unsafe();
 		std::cout << *unsafe << ",   " << unsafe<< "\n";
 
@@ -138,6 +142,9 @@ namespace MemoryControl {
 	_smart_ptr<T>::_smart_ptr()
 	{
 		s_ref = ALLOCATOR.allocate_mem(sizeof(T));
+#ifdef _TEST
+		std::cout << "smart_ptr() constructed. Links: "<< s_ref->ref_count<<", adress: "<<s_ref->mem_ref<<"\n";
+#endif
 	}
 
 	template<class T>
@@ -146,6 +153,9 @@ namespace MemoryControl {
 		s_ref = ALLOCATOR.allocate_mem(sizeof(T));
 		T *temp_ptr = (T*)s_ref->mem_ref;
 		*temp_ptr = _obj;
+#ifdef _TEST
+		std::cout << "smart_ptr(_obj) constructed. Links: " << s_ref->ref_count << ", adress: " << s_ref->mem_ref << "\n";
+#endif
 	}
 	template<class T>
 	_smart_ptr<T>::_smart_ptr(T _obj, size_t _size_of_array)
@@ -153,6 +163,9 @@ namespace MemoryControl {
 		s_ref = ALLOCATOR.allocate_mem(sizeof(T), _size_of_array);
 		T *temp_ptr = (T*)s_ref->mem_ref;
 		*temp_ptr = _obj;
+#ifdef _TEST
+		std::cout << "smart_ptr(_obj, _size_of_array) constructed. Links: " << s_ref->ref_count << ", adress: " << s_ref->mem_ref << "\n";
+#endif
 	}
 
 	template<class T>
