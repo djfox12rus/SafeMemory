@@ -79,7 +79,7 @@ namespace MemoryControl {
 		T* operator->();
 		T& operator* ();
 
-		//T& operator[](size_t);
+		T& operator[](size_t);
 
 		_smart_ptr<T>& operator=(_smart_ptr<T>& _left);
 

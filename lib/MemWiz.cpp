@@ -216,25 +216,25 @@ namespace MemoryControl {
 		return *((T*)s_ref->mem_ref);
 	}
 
-	//template<class T>
-	//T & _smart_ptr<T>::operator[](size_t _place)
-	//{
-	//	//НО данный оператор сработает в т.ч. и не для массивов. При любом отличном от нуля значении _place он выдаст результат нулевого конструктора, но выдаст.
+	template<class T>
+	T & _smart_ptr<T>::operator[](size_t _place)
+	{
+		//НО данный оператор сработает в т.ч. и не для массивов. При любом отличном от нуля значении _place он выдаст результат нулевого конструктора, но выдаст.
 
-	//	T zero = T();
-	//	T* out;
-	//	if (!s_ref || !s_ref->mem_ref) return zero;//нулевые указатели
-	//	if ((void*)((T*)s_ref->mem_ref + _place) >= (void*)((int8_t*)ALLOCATOR.block + unit_memory * 1024)) return zero; //выход за пределы глобальной памяти
-	//	_memory_interface::ref* next_ref = s_ref + 1;
-	//	if (!next_ref->mem_ref) { 
-	//		out = (T*)s_ref->mem_ref + _place;
-	//		return *out; 
-	//	}
-	//	if ((void*)((T*)s_ref->mem_ref + _place) >= next_ref->mem_ref) return zero;
+		T zero = T();
+		T* out;
+		if (!s_ref || !s_ref->mem_ref) return zero;//нулевые указатели
+		if ((void*)((T*)s_ref->mem_ref + _place) >= (void*)((int8_t*)ALLOCATOR.block + unit_memory * 1024)) return zero; //выход за пределы глобальной памяти
+		_memory_interface::ref* next_ref = s_ref + 1;
+		if (!next_ref->mem_ref) { 
+			out = (T*)s_ref->mem_ref + _place;
+			return *out; 
+		}
+		if ((void*)((T*)s_ref->mem_ref + _place) >= next_ref->mem_ref) return zero;
 
-	//	out = (T*)s_ref->mem_ref + _place;
-	//	return *out;
-	//}
+		out = (T*)s_ref->mem_ref + _place;
+		return *out;
+	}
 
 	template<class T>
 	_smart_ptr<T>& _smart_ptr<T>::operator=(_smart_ptr<T>& _left)
