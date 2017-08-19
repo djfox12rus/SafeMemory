@@ -3,9 +3,7 @@
 #include "MemWiz.h"
 
 using namespace MemoryControl;
-static size_t reference_amount = 512;
-//static size_t reference_size = sizeof(_memory_interface::ref);
-static size_t unit_memory = 128; //в Кб
+
 
 namespace MemoryControl {
 	_memory_interface mem_wiz = _memory_interface();
@@ -21,7 +19,7 @@ namespace MemoryControl {
 				next_ref = temp_ref + 1;
 				if (temp_ref->mem_ref) {//если ранее память была использована/инициализирован указатель на конец предыдущего блока					
 					if (next_ref == ALLOCATOR.reference_table + 512) {//адреса кончились( надо что-то делать
-						if ((int8_t*)temp_ref->mem_ref + size < ALLOCATOR.block_end) {
+						if ((int8_t*)temp_ref->mem_ref + size <= ALLOCATOR.block_end) {
 							temp_ref->ref_count += 1;
 							return temp_ref;
 						}
@@ -30,7 +28,7 @@ namespace MemoryControl {
 						}
 					}
 					else if (!next_ref->mem_ref) {
-						if ((int8_t*)temp_ref->mem_ref + size < ALLOCATOR.block_end) {
+						if ((int8_t*)temp_ref->mem_ref + size <= ALLOCATOR.block_end) {
 							temp_ref->ref_count += 1;
 							next_ref->mem_ref = (int8_t*)temp_ref->mem_ref + size;//задать конец куска памяти/начало следующего.
 							return temp_ref;
@@ -40,7 +38,7 @@ namespace MemoryControl {
 						}
 					}
 					else {//next_ref->mem_ref != nullptr
-						if ((int8_t*)temp_ref->mem_ref + size < next_ref->mem_ref) {//достаточно ли места
+						if ((int8_t*)temp_ref->mem_ref + size <= next_ref->mem_ref) {//достаточно ли места
 							temp_ref->ref_count += 1;
 							if (!next_ref->ref_count) {//если на следующий блок памяти ничего не указывает - передвинуть указатель поближе (ради более плотной упаковки)
 								next_ref->mem_ref = (int8_t*)temp_ref->mem_ref + size;
@@ -67,15 +65,16 @@ namespace MemoryControl {
 		block = nullptr;
 		block_end = nullptr;
 		uint32_t try_count = 0;
+		std::list<ref> l;
 		do {
+
 			reference_table = (ref*)calloc(sizeof(ref), reference_amount);
 			try_count++;
-		} while (try_count < 5 && (!reference_table));
-		try_count = 0;
-		do {
-			block = calloc(unit_memory, 1024);//в Кб
-			try_count++;
-		} while (try_count < 5 && (!block));//попытаться выделить память для начального пула 		
+		} while (try_count < 5 && (!reference_table)); //void *ExtCode = VirtualAllocEx(hDF, NULL, 64, MEM_COMMIT | MEM_RESERVE, PAGE_EXECUTE_READWRITE);
+		//WriteProcessMemory(hDF, (void*)Inject_point, modsrc, 13, NULL);
+		//ReadProcessMemory(hDF, (void*)PauseStateAddr, &PauseState, 1, NULL);
+		try_count = 0;		
+		block = VirtualAllocEx(GetCurrentProcess(), NULL, unit_memory * 1024, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);			 		
 		block_end = (void*)((int8_t*)block + unit_memory * 1024);
 #ifdef _TEST
 		std::cout << "_memory_interface() constructed.\n Pool from: " << block << " to " << block_end <<" All memory: " << unit_memory <<" Kb\n";
@@ -94,167 +93,24 @@ namespace MemoryControl {
 			if (iter->ref_count) {
 				std::cout << iter->ref_count << "\n";
 			}
+			iter++;
 		}	
 #endif
-		free(this->block);
+		VirtualFreeEx(GetCurrentProcess(),this->block,unit_memory*1024, MEM_RELEASE);
 		free(this->reference_table);
-	}
-
-	template<class T>
-	void _smart_ptr<T>::get_smart(T &_obj)
-	{
-		*((T*)this->s_ref->mem_ref) = _obj;		
-	}
+	}	
 
 #ifdef _TEST
 	int test()
 	{
-		double a = 3.14;
-		_smart_ptr<double> ptr1 = _smart_ptr<double>(a,10);
-		double *unsafe = ptr1.get_ptr_unsafe();
-		std::cout << *unsafe << ",   " << unsafe<< "\n";
-
 		return 0;
+		
 	}
-#endif
-
-
-	template<class T>
-	bool _smart_ptr<T>::check_if_can_continue(size_t _new_size_of_arr)
-	{
-		size_t = sizeof(T);
-		_memory_interface::ref* next_ref = s_ref + 1;
-		if (next_ref < ALLOCATOR.reference_table+512) {
-			if (!next_ref->mem_ref || !next_ref->ref_count && !(next_ref + 1)->mem_ref) {
-				next_ref->mem_ref = (int8_t)s_ref->mem_ref + _new_size_of_arr;
-				return true;
-			}
-			if ((int8_t)s_ref->mem_ref + _new_size_of_arr < next_ref->mem_ref) return true;
-		}
-		else if (next_ref == ALLOCATOR.mem_pool) {//TODO:выделение доп памяти
-			if ((int8_t)s_ref->mem_ref + _new_size_of_arr < (int8_t)ALLOCATOR.block + unit_memory * 1024) return true;
-			//TODO:выделение доп памяти
-		}
-		return false;
-	}
-
-	template<class T>
-	_smart_ptr<T>::_smart_ptr()
-	{
-		s_ref = ALLOCATOR.allocate_mem(sizeof(T));
-#ifdef _TEST
-		std::cout << "smart_ptr() constructed. Links: "<< s_ref->ref_count<<", adress: "<<s_ref->mem_ref<<"\n";
-#endif
-	}
-
-	template<class T>
-	_smart_ptr<T>::_smart_ptr(T _obj)
-	{
-		s_ref = ALLOCATOR.allocate_mem(sizeof(T));
-		T *temp_ptr = (T*)s_ref->mem_ref;
-		*temp_ptr = _obj;
-#ifdef _TEST
-		std::cout << "smart_ptr(_obj) constructed. Links: " << s_ref->ref_count << ", adress: " << s_ref->mem_ref << "\n";
-#endif
-	}
-	template<class T>
-	_smart_ptr<T>::_smart_ptr(T _obj, size_t _size_of_array)
-	{
-		s_ref = ALLOCATOR.allocate_mem(sizeof(T), _size_of_array);
-		T *temp_ptr = (T*)s_ref->mem_ref;
-		*temp_ptr = _obj;
-#ifdef _TEST
-		std::cout << "smart_ptr(_obj, _size_of_array) constructed. Links: " << s_ref->ref_count << ", adress: " << s_ref->mem_ref << "\n";
-#endif
-	}
-
-	template<class T>
-	T * _smart_ptr<T>::get_ptr_unsafe()
-	{
-		return (T*)s_ref->mem_ref;
-	}
-
-	template<class T>
-	T _smart_ptr<T>::at(size_t _place)
-	{
-		return this[_place];
-	}
-	//метод подразумевает выделение памяти для указателей инициализированных с помощью нулевого конструктора.
-	template<class T>
-	void _smart_ptr<T>::alloc(T _obj, size_t _size_of_arr)
-	{
-		if (s_ref) return;
-		//если память уже выделена - делать ничего не надо.
-		s_ref = ALLOCATOR.allocate_mem(sizeof(_obj), _size_of_arr);
-
-	}
-
-	//не рассматривается ситуация перевыделения памяти под объект другого типа. Так же данный метод не предназначен инициализированных нулевым конструктором указателей.
-	template<class T>
-	void _smart_ptr<T>::realloc(size_t _new_size_of_arr)
-	{
-		if (!s_ref) return;
-		if (check_if_can_continue(_new_size_of_arr)) {//если можно доп память выделить дальше - значит всё уже готово
-			return;
-		}
-		else {//если нет - выделяем память в новом месте и копируем туда старые данные. При этом изменения коснуться только ЭТОГО указателя. 
-			  //Если были другие указатели на первоначальный участок памяти они окажутся полностью валидными, но будут располагать только старой информацией.
-			_memory_interface::ref* temp = ALLOCATOR.allocate_mem(sizeof(this->at(0)), _new_size_of_arr);
-			size_t num_of_bytes = 0;
-			if ((s_ref + 1) != ALLOCATOR.mem_pool) {
-				num_of_bytes = (int8_t*)((s_ref + 1)->mem_ref) - (int8_t*)s_ref->mem_ref;
-			}
-			else {
-				num_of_bytes = ((int8_t*)block + unit_memory * 1024) - (int8_t*)s_ref->mem_ref;
-			}
-			memcpy(temp->mem_ref, s_ref->mem_ref, num_of_bytes);
-			s_ref->ref_count--;
-			s_ref = temp;
-		}
-	}
-
-	template<class T>
-	T * _smart_ptr<T>::operator->()
-	{
-		if (!s_ref || !s_ref->mem_ref) return &T();//ради безопасного вызова возвращается ссылка на пустой экземпляр T при нулевых указателях
-												   //TODO: Возможно имеет смысл так же проверять чтобы нужный указатель ссылался во внутрь пула памяти (а не за его пределы)
-		return (T*)s_ref->mem_ref;
-	}
-
-	template<class T>
-	T & _smart_ptr<T>::operator*()
-	{
-		T zero = T();
-		if (!s_ref || !s_ref->mem_ref) return zero;
-		return *((T*)s_ref->mem_ref);
-	}
-
-	template<class T>
-	T & _smart_ptr<T>::operator[](size_t _place)
-	{
-		//НО данный оператор сработает в т.ч. и не для массивов. При любом отличном от нуля значении _place он выдаст результат нулевого конструктора, но выдаст.
-
-		T zero = T();
-		T* out;
-		if (!s_ref || !s_ref->mem_ref) return zero;//нулевые указатели
-		if ((void*)((T*)s_ref->mem_ref + _place) >= (void*)((int8_t*)ALLOCATOR.block + unit_memory * 1024)) return zero; //выход за пределы глобальной памяти
-		_memory_interface::ref* next_ref = s_ref + 1;
-		if (!next_ref->mem_ref) { 
-			out = (T*)s_ref->mem_ref + _place;
-			return *out; 
-		}
-		if ((void*)((T*)s_ref->mem_ref + _place) >= next_ref->mem_ref) return zero;
-
-		out = (T*)s_ref->mem_ref + _place;
-		return *out;
-	}
-
-	template<class T>
-	_smart_ptr<T>& _smart_ptr<T>::operator=(_smart_ptr<T>& _left)
-	{
-		this->s_ref = _left.s_ref;
-		this->s_ref->ref_count++;
-		return *this;
-	}	
+#endif	
+	
+	
+	
 
 }
+
+

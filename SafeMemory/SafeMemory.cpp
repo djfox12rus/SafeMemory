@@ -4,6 +4,7 @@
 #include "stdafx.h"
 #include "../lib/MemWiz.h"
 
+
 using namespace MemoryControl;
 
 
@@ -13,44 +14,42 @@ int main()
 	MemoryControl::test();
 #endif
 
-	double a = 45.14;
-	_smart_ptr<double> d_arr = _smart_ptr<double>(a, 10);
-	double *unsafe = d_arr.get_ptr_unsafe();
-	std::cout << *unsafe << ",   " << unsafe << "\n";
-	d_arr.~_smart_ptr();
-	/*
-	ldouble_sptr d_arr = ldouble_sptr(double(), 50);
-	std::cout << "d_arr: ";
-	for (int i = 0; i < 50; i++) {
-		d_arr[i] = pow((double)i / 50, i);
-		std::cout << d_arr[i] << ", ";
+	
+	/*void *ExtCode = VirtualAllocEx(GetCurrentProcess(), NULL, 64, MEM_COMMIT | MEM_RESERVE, PAGE_EXECUTE_READWRITE);
+	uint64_t addr = (uint64_t)ExtCode;
+	int* p = (int*)addr;
+	*p = 5;*/
+	uint64_t* adr;
+	int a = 314;
+	
+	_smart_ptr<int> ptr1 = _smart_ptr<int>(a,10);
+	for (int i = 0; i < 10; i++) {
+		ptr1[i] = i*i;
+		
+		std::cout << ptr1[i] << ",   " << &ptr1[i] << "\n";
 	}
-	std::cout << "\n";
-	ldouble_sptr d_arr1 = ldouble_sptr(double(), 50);
-	std::cout << "d_arr1: ";
-	for (int i = 0; i < 50; i++) {
-		d_arr1[i] = i*d_arr[i];
-		std::cout << d_arr1[i] << ", ";
+	adr=(uint64_t*)ptr1[0];
+	_smart_ptr<double> ptr2 = _smart_ptr<double>((double)a, 10);
+	for (int i = 0; i < 10; i++) {
+		ptr2[i] = i*i;
+
+		std::cout << ptr2[i] << ",   " << &ptr2[i] << "\n";
 	}
-	std::cout << "\n";
-	ldouble_sptr d_arr2;
-	d_arr2 = d_arr1;
-	std::cout << "d_arr2: ";
-	for (int i = 0; i < 50; i++) {
-		std::cout << d_arr2[i] << ", ";
+	ptr2.~_smart_ptr();
+	
+	_smart_ptr<int> ptr3 = _smart_ptr<int>(a, 20);
+	for (int i = 0; i < 20; i++) {
+		ptr3[i] = i*i;
+
+		std::cout << ptr3[i] << ",   " << &ptr3[i] << "\n";
 	}
-	std::cout << "\n";
-
-
-	d_arr = d_arr2;
-	std::cout << "d_arr: ";
-	for (int i = 0; i < 50; i++) {
-		std::cout << d_arr[i] << ", ";
-	}
-	std::cout << "\n";*/
-
-
+	_smart_ptr<int> ptr4;
+	ptr4 = ptr3;
+	ptr1.~_smart_ptr();
+	ptr3.~_smart_ptr();
+	ptr4.~_smart_ptr();
 	MemoryControl::mem_wiz.~_memory_interface();
+
     return 0;
 }
 
